@@ -106,6 +106,7 @@ class Dropzone extends Emitter
     "removedfile"
     "thumbnail"
     "autoretry"
+    "reject"
     "error"
     "errormultiple"
     "processing"
@@ -422,6 +423,15 @@ class Dropzone extends Emitter
 
         setTimeout (=> file.previewElement.classList.add "dz-image-preview"), 1
 
+    # Called whenever an upload has failed and is retried
+    # Receives `file`, `message` and failed `xhr`
+    autoretry: noop
+
+    # Called whenever a file is rejected
+    # Receives `file` and `message`
+    reject: noop
+
+
     # Called whenever an error occurs
     # Receives `file` and `message`
     error: (file, message) ->
@@ -653,8 +663,9 @@ class Dropzone extends Emitter
         document.querySelector(@options.hiddenInputContainer).appendChild @hiddenFileInput
         @hiddenFileInput.addEventListener "change", =>
           files = @hiddenFileInput.files
+          filesBefore = @files.length
           @addFile file for file in files if files.length
-          @emit "addedfiles", files
+          @emit "addedfiles", files if @files.length > filesBefore
           setupHiddenFileInput()
       setupHiddenFileInput()
 
@@ -951,30 +962,29 @@ class Dropzone extends Emitter
       @options.accept.call this, file, done
 
   addFile: (file) ->
-    file.upload =
-      progress: 0
-      # Setting the total upload size to file.size for the beginning
-      # It's actual different than the size to be transmitted.
-      total: file.size
-      bytesSent: 0
-    @files.push file
-
-    file.status = Dropzone.ADDED
-    file.uploadAttempt = 1 # the first upload attempt
-
-    @emit "addedfile", file
-
-    @_enqueueThumbnail file
 
     @accept file, (error) =>
       if error
         file.accepted = false
-        @_errorProcessing [ file ], error # Will set the file.status
+        file.status = Dropzone.REJECTED
+        @emit "reject", file, error
       else
         file.accepted = true
-        @enqueueFile file if @options.autoQueue # Will set .accepted = true
-      @_updateMaxFilesReachedClass()
 
+        file.upload =
+          progress: 0
+          # Setting the total upload size to file.size for the beginning
+          # It's actual different than the size to be transmitted.
+          total: file.size
+          bytesSent: 0
+
+        file.status = Dropzone.ADDED
+        file.uploadAttempt = 1 # the first upload attempt
+        @files.push file
+        @emit "addedfile", file
+        @_enqueueThumbnail file
+        @enqueueFile file if @options.autoQueue # Will set .accepted = true
+        @_updateMaxFilesReachedClass()
 
   # Wrapper for enqueueFile
   enqueueFiles: (files) -> @enqueueFile file for file in files; null
@@ -1159,13 +1169,13 @@ class Dropzone extends Emitter
     handleError = =>
       for file in files
         if file.uploadAttempt >= @options.uploadAttempts
-          console.log('Failing permanently!');
           @_errorProcessing files, response || @options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr
         else
           file.uploadAttempt++
-          console.log('Starting attempt: '+file.uploadAttempt+'/'+@options.uploadAttempts+' time...')
-          #setTimeout (=> @emit "autoretry", file), 0
-          setTimeout (=> @uploadFile file), 1000
+          setTimeout (=>
+            @emit "autoretry", file, response || @options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr
+            @uploadFile file
+          ), 1000
           
 
 
@@ -1502,6 +1512,7 @@ Dropzone.UPLOADING = "uploading"
 Dropzone.PROCESSING = Dropzone.UPLOADING # alias
 
 Dropzone.CANCELED = "canceled"
+Dropzone.REJECTED = "rejected"
 Dropzone.ERROR = "error"
 Dropzone.SUCCESS = "success"
 
