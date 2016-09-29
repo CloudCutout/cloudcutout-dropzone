@@ -1,0 +1,173 @@
+$thumbnailWidth: 60px;
+
+.non-break {
+  white-space: nowrap;
+}
+
+.dropzone, .dropzone * {
+  box-sizing: border-box;
+}
+.dropzone {
+  min-height: 300px;
+  border: 2px dashed #3d3f40;
+  overflow-y: auto;
+  background: white;
+
+  .dz-message {
+      text-align: center;
+      margin: 2em 0;
+  }
+
+  &.dz-started {
+    .dz-message {
+      display: none;
+    }
+  }
+
+  .dz-filename {
+    word-break: break-all;
+  }
+
+  /*&.dz-drag-hover {
+    border-style: solid;
+    .dz-message {
+      opacity: 0.5;
+    }
+  }*/
+
+  .dz-preview {
+    display: inline-block;
+    position: relative;
+    margin: 10px;
+    padding: 3px;
+    background: white;
+    width: $thumbnailWidth;
+    box-shadow: 4px 4px 5px 0px #646464;
+    border: 1px solid #646464;
+
+    &:hover {
+      .dz-details-popup {
+         display: block;
+      }
+    }
+
+    img {
+      display: block;
+      width: 100%;
+      min-height: 100%;
+    }
+
+    .dz-details {
+      .dz-filename {
+        font-size: 10px;
+        font-family: monospace;
+        text-align: center;
+        margin-top: 4px;
+      }
+    }
+
+    .dz-thumbnail-icon {
+      display: none;
+      text-align: center;
+
+    }
+
+    // show image icon until thumbnail has been loaded
+    &.dz-file-preview {
+      .dz-thumbnail-icon {
+          display: block;
+      }
+    }
+
+    .dz-details-overlay {
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+
+       .dz-progress {
+          position: relative;
+          height: 5px;
+          width: 90%;
+          border: 1px solid black;
+          background: white;
+          
+          .dz-upload {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: #4caf50; 
+          }
+        }
+    }
+
+    // remove overlay on success
+    &.dz-success {
+      .dz-details-overlay {
+        background:  rgba(0,0,0,0);
+      }
+
+      .dz-success-mark {
+         display: block;
+      }
+    }
+
+    &.dz-success, &.dz-error {
+      .dz-progress {
+              display: none;
+      }
+    }
+
+    .dz-details-popup {
+      position: absolute;
+      display: none;
+      top: 30%;
+      left: 30%;
+      background: white;
+      border: 1px solid black;
+      margin-top: 5px;
+      margin-left: -1px;
+      box-shadow: 4px 4px 5px 0px #646464;
+      z-index: 10000;
+
+      table {
+        font-size: 12px;
+      }
+
+      td {
+        vertical-align: top;
+
+        &:first-child {
+          font-weight: bold;
+        }
+
+        &:nth-child(2) {
+          min-width: $thumbnailWidth;
+        }
+      }
+    }
+
+
+    .dz-success-mark, .dz-error-mark, .dz-error-message {
+      display: none;
+    }
+
+
+    &.dz-error .dz-error-mark {
+        display: block;
+        color: red;
+    }
+
+    &.dz-error .dz-error-message {
+      display: block;
+    }
+}
+
+}
+
+
