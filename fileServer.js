@@ -44,7 +44,7 @@ app.post('/', function(req, res){
 
   // once all the files have been uploaded, send a response to the client
   form.on('end', function() {
-    //  res.send(500);
+      //res.send(500);
     res.end('success');
   });
 
