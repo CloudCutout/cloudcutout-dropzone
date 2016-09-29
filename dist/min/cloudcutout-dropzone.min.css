@@ -1,0 +1,102 @@
+.non-break {
+  white-space: nowrap; }
+
+.dropzone, .dropzone * {
+  box-sizing: border-box; }
+
+.dropzone {
+  min-height: 300px;
+  border: 2px dashed #3d3f40;
+  overflow-y: auto;
+  background: white;
+  /*&.dz-drag-hover {
+    border-style: solid;
+    .dz-message {
+      opacity: 0.5;
+    }
+  }*/ }
+  .dropzone .dz-message {
+    text-align: center;
+    margin: 2em 0; }
+  .dropzone.dz-started .dz-message {
+    display: none; }
+  .dropzone .dz-filename {
+    word-break: break-all; }
+  .dropzone .dz-preview {
+    display: inline-block;
+    position: relative;
+    margin: 10px;
+    padding: 3px;
+    background: white;
+    width: 60px;
+    box-shadow: 4px 4px 5px 0px #646464;
+    border: 1px solid #646464; }
+    .dropzone .dz-preview:hover .dz-details-popup {
+      display: block; }
+    .dropzone .dz-preview img {
+      display: block;
+      width: 100%;
+      min-height: 100%; }
+    .dropzone .dz-preview .dz-details .dz-filename {
+      font-size: 10px;
+      font-family: monospace;
+      text-align: center;
+      margin-top: 4px; }
+    .dropzone .dz-preview .dz-thumbnail-icon {
+      display: none;
+      text-align: center; }
+    .dropzone .dz-preview.dz-file-preview .dz-thumbnail-icon {
+      display: block; }
+    .dropzone .dz-preview .dz-details-overlay {
+      position: absolute;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7); }
+      .dropzone .dz-preview .dz-details-overlay .dz-progress {
+        position: relative;
+        height: 5px;
+        width: 90%;
+        border: 1px solid black;
+        background: white; }
+        .dropzone .dz-preview .dz-details-overlay .dz-progress .dz-upload {
+          display: block;
+          height: 100%;
+          width: 0;
+          background: #4caf50; }
+    .dropzone .dz-preview.dz-success .dz-details-overlay {
+      background: transparent; }
+    .dropzone .dz-preview.dz-success .dz-success-mark {
+      display: block; }
+    .dropzone .dz-preview.dz-success .dz-progress, .dropzone .dz-preview.dz-error .dz-progress {
+      display: none; }
+    .dropzone .dz-preview .dz-details-popup {
+      position: absolute;
+      display: none;
+      top: 30%;
+      left: 30%;
+      background: white;
+      border: 1px solid black;
+      margin-top: 5px;
+      margin-left: -1px;
+      box-shadow: 4px 4px 5px 0px #646464;
+      z-index: 10000; }
+      .dropzone .dz-preview .dz-details-popup table {
+        font-size: 12px; }
+      .dropzone .dz-preview .dz-details-popup td {
+        vertical-align: top; }
+        .dropzone .dz-preview .dz-details-popup td:first-child {
+          font-weight: bold; }
+        .dropzone .dz-preview .dz-details-popup td:nth-child(2) {
+          min-width: 60px; }
+    .dropzone .dz-preview .dz-success-mark, .dropzone .dz-preview .dz-error-mark, .dropzone .dz-preview .dz-error-message {
+      display: none; }
+    .dropzone .dz-preview.dz-error .dz-error-mark {
+      display: block;
+      color: red; }
+    .dropzone .dz-preview.dz-error .dz-error-message {
+      display: block; }

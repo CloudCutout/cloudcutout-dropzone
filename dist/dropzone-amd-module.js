@@ -123,15 +123,16 @@
         dropzone.on("dragEnter", function() { });
      */
 
-    Dropzone.prototype.events = ["drop", "dragstart", "dragend", "dragenter", "dragover", "dragleave", "addedfile", "addedfiles", "removedfile", "thumbnail", "error", "errormultiple", "processing", "processingmultiple", "uploadprogress", "totaluploadprogress", "sending", "sendingmultiple", "success", "successmultiple", "canceled", "canceledmultiple", "complete", "completemultiple", "reset", "maxfilesexceeded", "maxfilesreached", "queuecomplete"];
+    Dropzone.prototype.events = ["drop", "dragstart", "dragend", "dragenter", "dragover", "dragleave", "addedfile", "addedfiles", "removedfile", "thumbnail", "autoretry", "error", "errormultiple", "processing", "processingmultiple", "uploadprogress", "totaluploadprogress", "sending", "sendingmultiple", "success", "successmultiple", "canceled", "canceledmultiple", "complete", "completemultiple", "reset", "maxfilesexceeded", "maxfilesreached", "queuecomplete"];
 
     Dropzone.prototype.defaultOptions = {
       url: null,
       method: "post",
       withCredentials: false,
-      parallelUploads: 2,
+      parallelUploads: 5,
+      uploadAttempts: 3,
       uploadMultiple: false,
-      maxFilesize: 256,
+      maxFilesize: 100,
       paramName: "file",
       createImageThumbnails: true,
       maxThumbnailFilesize: 10,
@@ -151,9 +152,9 @@
       hiddenInputContainer: "body",
       capture: null,
       renameFilename: null,
-      dictDefaultMessage: "Drop files here to upload",
+      dictDefaultMessage: "Drop your image files or folders here (or click to choose them)",
       dictFallbackMessage: "Your browser does not support drag'n'drop file uploads.",
-      dictFallbackText: "Please use the fallback form below to upload your files like in the olden days.",
+      dictFallbackText: "Please use the fallback form below to upload your files.",
       dictFileTooBig: "File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.",
       dictInvalidFileType: "You can't upload files of this type.",
       dictResponseError: "Server responded with {{statusCode}} code.",
@@ -364,17 +365,22 @@
       },
       processingmultiple: noop,
       uploadprogress: function(file, progress, bytesSent) {
-        var node, _i, _len, _ref, _results;
+        var node, _i, _j, _len, _len1, _ref, _ref1, _results;
         if (file.previewElement) {
           _ref = file.previewElement.querySelectorAll("[data-dz-uploadprogress]");
-          _results = [];
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             node = _ref[_i];
             if (node.nodeName === 'PROGRESS') {
-              _results.push(node.value = progress);
+              node.value = progress;
             } else {
-              _results.push(node.style.width = "" + progress + "%");
+              node.style.width = "" + progress + "%";
             }
+          }
+          _ref1 = file.previewElement.querySelectorAll("[data-dz-uploadprogress-percent]");
+          _results = [];
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            node = _ref1[_j];
+            _results.push(node.textContent = Math.floor(progress));
           }
           return _results;
         }
@@ -405,7 +411,7 @@
       maxfilesreached: noop,
       queuecomplete: noop,
       addedfiles: noop,
-      previewTemplate: "<div class=\"dz-preview dz-file-preview\">\n  <div class=\"dz-image\"><img data-dz-thumbnail /></div>\n  <div class=\"dz-details\">\n    <div class=\"dz-size\"><span data-dz-size></span></div>\n    <div class=\"dz-filename\"><span data-dz-name></span></div>\n  </div>\n  <div class=\"dz-progress\"><span class=\"dz-upload\" data-dz-uploadprogress></span></div>\n  <div class=\"dz-error-message\"><span data-dz-errormessage></span></div>\n  <div class=\"dz-success-mark\">\n    <svg width=\"54px\" height=\"54px\" viewBox=\"0 0 54 54\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:sketch=\"http://www.bohemiancoding.com/sketch/ns\">\n      <title>Check</title>\n      <defs></defs>\n      <g id=\"Page-1\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" sketch:type=\"MSPage\">\n        <path d=\"M23.5,31.8431458 L17.5852419,25.9283877 C16.0248253,24.3679711 13.4910294,24.366835 11.9289322,25.9289322 C10.3700136,27.4878508 10.3665912,30.0234455 11.9283877,31.5852419 L20.4147581,40.0716123 C20.5133999,40.1702541 20.6159315,40.2626649 20.7218615,40.3488435 C22.2835669,41.8725651 24.794234,41.8626202 26.3461564,40.3106978 L43.3106978,23.3461564 C44.8771021,21.7797521 44.8758057,19.2483887 43.3137085,17.6862915 C41.7547899,16.1273729 39.2176035,16.1255422 37.6538436,17.6893022 L23.5,31.8431458 Z M27,53 C41.3594035,53 53,41.3594035 53,27 C53,12.6405965 41.3594035,1 27,1 C12.6405965,1 1,12.6405965 1,27 C1,41.3594035 12.6405965,53 27,53 Z\" id=\"Oval-2\" stroke-opacity=\"0.198794158\" stroke=\"#747474\" fill-opacity=\"0.816519475\" fill=\"#FFFFFF\" sketch:type=\"MSShapeGroup\"></path>\n      </g>\n    </svg>\n  </div>\n  <div class=\"dz-error-mark\">\n    <svg width=\"54px\" height=\"54px\" viewBox=\"0 0 54 54\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:sketch=\"http://www.bohemiancoding.com/sketch/ns\">\n      <title>Error</title>\n      <defs></defs>\n      <g id=\"Page-1\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" sketch:type=\"MSPage\">\n        <g id=\"Check-+-Oval-2\" sketch:type=\"MSLayerGroup\" stroke=\"#747474\" stroke-opacity=\"0.198794158\" fill=\"#FFFFFF\" fill-opacity=\"0.816519475\">\n          <path d=\"M32.6568542,29 L38.3106978,23.3461564 C39.8771021,21.7797521 39.8758057,19.2483887 38.3137085,17.6862915 C36.7547899,16.1273729 34.2176035,16.1255422 32.6538436,17.6893022 L27,23.3431458 L21.3461564,17.6893022 C19.7823965,16.1255422 17.2452101,16.1273729 15.6862915,17.6862915 C14.1241943,19.2483887 14.1228979,21.7797521 15.6893022,23.3461564 L21.3431458,29 L15.6893022,34.6538436 C14.1228979,36.2202479 14.1241943,38.7516113 15.6862915,40.3137085 C17.2452101,41.8726271 19.7823965,41.8744578 21.3461564,40.3106978 L27,34.6568542 L32.6538436,40.3106978 C34.2176035,41.8744578 36.7547899,41.8726271 38.3137085,40.3137085 C39.8758057,38.7516113 39.8771021,36.2202479 38.3106978,34.6538436 L32.6568542,29 Z M27,53 C41.3594035,53 53,41.3594035 53,27 C53,12.6405965 41.3594035,1 27,1 C12.6405965,1 1,12.6405965 1,27 C1,41.3594035 12.6405965,53 27,53 Z\" id=\"Oval-2\" sketch:type=\"MSShapeGroup\"></path>\n        </g>\n      </g>\n    </svg>\n  </div>\n</div>"
+      previewTemplate: "  <div class=\"dz-preview dz-file-preview\">\n    <div class=\"dz-details\">\n        <div class=\"dz-image\">\n            <img data-dz-thumbnail />\n            <div class=\"dz-thumbnail-icon\"><i class=\"fa fa-file-image-o fa-2x\"></i></div>\n        </div>\n        <div class=\"dz-filename\"><span data-dz-name></span></div>\n    </div>\n    <div class=\"dz-details-overlay\">\n        <div class=\"dz-progress\"><span class=\"dz-upload\" data-dz-uploadprogress></span></div>\n        <div class=\"dz-error-mark\"><i class=\"fa fa-exclamation-triangle\"></i></div>\n    </div>\n    <div class=\"dz-details-popup\">\n        <table>\n            <tr>\n                <td>Filename</td>\n                <td class=\"dz-filename\" data-dz-name></td>\n            </tr>\n            <tr>\n                <td>Size</td>\n                <td class=\"dz-size\" data-dz-size></td>\n            </tr>\n            <tr>\n                <td>Status</td>\n                <td>\n                    <div class=\"dz-progress\" class=\"non-break\">Uploading...&nbsp;<span data-dz-uploadprogress-percent>0</span>%</div>\n                    <div class=\"dz-success-mark\">File uploaded successfully</div>\n                    <div class=\"dz-error-message\">Error:&nbsp;<span data-dz-errormessage></span></div>\n                </td>\n            </tr>\n        </table>\n    </div>\n</div>"
     };
 
     extend = function() {
@@ -995,6 +1001,7 @@
       };
       this.files.push(file);
       file.status = Dropzone.ADDED;
+      file.uploadAttempt = 1;
       this.emit("addedfile", file);
       this._enqueueThumbnail(file);
       return this.accept(file, (function(_this) {
@@ -1263,7 +1270,16 @@
           _results = [];
           for (_j = 0, _len1 = files.length; _j < _len1; _j++) {
             file = files[_j];
-            _results.push(_this._errorProcessing(files, response || _this.options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr));
+            if (file.uploadAttempt >= _this.options.uploadAttempts) {
+              console.log('Failing permanently!');
+              _results.push(_this._errorProcessing(files, response || _this.options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr));
+            } else {
+              file.uploadAttempt++;
+              console.log('Starting attempt: ' + file.uploadAttempt + '/' + _this.options.uploadAttempts + ' time...');
+              _results.push(setTimeout((function() {
+                return _this.uploadFile(file);
+              }), 1000));
+            }
           }
           return _results;
         };
@@ -1460,7 +1476,7 @@
     return element.dropzone;
   };
 
-  Dropzone.autoDiscover = true;
+  Dropzone.autoDiscover = false;
 
   Dropzone.discover = function() {
     var checkElements, dropzone, dropzones, _i, _len, _results;
