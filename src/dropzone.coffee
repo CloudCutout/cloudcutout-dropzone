@@ -105,6 +105,7 @@ class Dropzone extends Emitter
     "addedfiles"
     "removedfile"
     "thumbnail"
+    "autoretry"
     "error"
     "errormultiple"
     "processing"
@@ -131,9 +132,10 @@ class Dropzone extends Emitter
     url: null
     method: "post"
     withCredentials: no
-    parallelUploads: 2
+    parallelUploads: 5
+    uploadAttempts: 3
     uploadMultiple: no # Whether to send multiple files in one request.
-    maxFilesize: 256 # in MB
+    maxFilesize: 100 # in MB
     paramName: "file" # The name of the file param that gets transferred.
     createImageThumbnails: true
     maxThumbnailFilesize: 10 # in MB. When the filename exceeds this limit, the thumbnail will not be generated.
@@ -218,14 +220,14 @@ class Dropzone extends Emitter
     # Dictionary
 
     # The text used before any files are dropped
-    dictDefaultMessage: "Drop files here to upload"
+    dictDefaultMessage: "Drop your image files or folders here (or click to choose them)"
 
     # The text that replaces the default message text it the browser is not supported
     dictFallbackMessage: "Your browser does not support drag'n'drop file uploads."
 
     # The text that will be added before the fallback form
     # If null, no text will be added at all.
-    dictFallbackText: "Please use the fallback form below to upload your files like in the olden days."
+    dictFallbackText: "Please use the fallback form below to upload your files."
 
     # If the filesize is too big.
     dictFileTooBig: "File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB."
@@ -451,6 +453,9 @@ class Dropzone extends Emitter
           else
             node.style.width = "#{progress}%"
 
+        for node in file.previewElement.querySelectorAll("[data-dz-uploadprogress-percent]")
+            node.textContent = Math.floor(progress)
+
     # Called whenever the total upload progress gets updated.
     # Called with totalUploadProgress (0-100), totalBytes and totalBytesSent
     totaluploadprogress: noop
@@ -494,35 +499,39 @@ class Dropzone extends Emitter
     # This template will be chosen when a new file is dropped.
     previewTemplate:  """
                       <div class="dz-preview dz-file-preview">
-                        <div class="dz-image"><img data-dz-thumbnail /></div>
                         <div class="dz-details">
-                          <div class="dz-size"><span data-dz-size></span></div>
-                          <div class="dz-filename"><span data-dz-name></span></div>
+                            <div class="dz-image">
+                                <img data-dz-thumbnail />
+                                <div class="dz-thumbnail-icon"><i class="fa fa-file-image-o fa-2x"></i></div>
+                            </div>
+                            <div class="dz-filename"><span data-dz-name></span></div>
                         </div>
-                        <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
-                        <div class="dz-error-message"><span data-dz-errormessage></span></div>
-                        <div class="dz-success-mark">
-                          <svg width="54px" height="54px" viewBox="0 0 54 54" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
-                            <title>Check</title>
-                            <defs></defs>
-                            <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
-                              <path d="M23.5,31.8431458 L17.5852419,25.9283877 C16.0248253,24.3679711 13.4910294,24.366835 11.9289322,25.9289322 C10.3700136,27.4878508 10.3665912,30.0234455 11.9283877,31.5852419 L20.4147581,40.0716123 C20.5133999,40.1702541 20.6159315,40.2626649 20.7218615,40.3488435 C22.2835669,41.8725651 24.794234,41.8626202 26.3461564,40.3106978 L43.3106978,23.3461564 C44.8771021,21.7797521 44.8758057,19.2483887 43.3137085,17.6862915 C41.7547899,16.1273729 39.2176035,16.1255422 37.6538436,17.6893022 L23.5,31.8431458 Z M27,53 C41.3594035,53 53,41.3594035 53,27 C53,12.6405965 41.3594035,1 27,1 C12.6405965,1 1,12.6405965 1,27 C1,41.3594035 12.6405965,53 27,53 Z" id="Oval-2" stroke-opacity="0.198794158" stroke="#747474" fill-opacity="0.816519475" fill="#FFFFFF" sketch:type="MSShapeGroup"></path>
-                            </g>
-                          </svg>
+                        <div class="dz-details-overlay">
+                            <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                            <div class="dz-error-mark"><i class="fa fa-exclamation-triangle"></i></div>
                         </div>
-                        <div class="dz-error-mark">
-                          <svg width="54px" height="54px" viewBox="0 0 54 54" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
-                            <title>Error</title>
-                            <defs></defs>
-                            <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
-                              <g id="Check-+-Oval-2" sketch:type="MSLayerGroup" stroke="#747474" stroke-opacity="0.198794158" fill="#FFFFFF" fill-opacity="0.816519475">
-                                <path d="M32.6568542,29 L38.3106978,23.3461564 C39.8771021,21.7797521 39.8758057,19.2483887 38.3137085,17.6862915 C36.7547899,16.1273729 34.2176035,16.1255422 32.6538436,17.6893022 L27,23.3431458 L21.3461564,17.6893022 C19.7823965,16.1255422 17.2452101,16.1273729 15.6862915,17.6862915 C14.1241943,19.2483887 14.1228979,21.7797521 15.6893022,23.3461564 L21.3431458,29 L15.6893022,34.6538436 C14.1228979,36.2202479 14.1241943,38.7516113 15.6862915,40.3137085 C17.2452101,41.8726271 19.7823965,41.8744578 21.3461564,40.3106978 L27,34.6568542 L32.6538436,40.3106978 C34.2176035,41.8744578 36.7547899,41.8726271 38.3137085,40.3137085 C39.8758057,38.7516113 39.8771021,36.2202479 38.3106978,34.6538436 L32.6568542,29 Z M27,53 C41.3594035,53 53,41.3594035 53,27 C53,12.6405965 41.3594035,1 27,1 C12.6405965,1 1,12.6405965 1,27 C1,41.3594035 12.6405965,53 27,53 Z" id="Oval-2" sketch:type="MSShapeGroup"></path>
-                              </g>
-                            </g>
-                          </svg>
+                        <div class="dz-details-popup">
+                            <table>
+                                <tr>
+                                    <td>Filename</td>
+                                    <td class="dz-filename" data-dz-name></td>
+                                </tr>
+                                <tr>
+                                    <td>Size</td>
+                                    <td class="dz-size" data-dz-size></td>
+                                </tr>
+                                <tr>
+                                    <td>Status</td>
+                                    <td>
+                                        <div class="dz-progress" class="non-break">Uploading...&nbsp;<span data-dz-uploadprogress-percent>0</span>%</div>
+                                        <div class="dz-success-mark">File uploaded successfully</div>
+                                        <div class="dz-error-message">Error:&nbsp;<span data-dz-errormessage></span></div>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
-                      </div>
-                      """
+                    </div>
+                    """
 
   # global utility
   extend = (target, objects...) ->
@@ -951,6 +960,7 @@ class Dropzone extends Emitter
     @files.push file
 
     file.status = Dropzone.ADDED
+    file.uploadAttempt = 1 # the first upload attempt
 
     @emit "addedfile", file
 
@@ -1148,7 +1158,17 @@ class Dropzone extends Emitter
 
     handleError = =>
       for file in files
-        @_errorProcessing files, response || @options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr
+        if file.uploadAttempt >= @options.uploadAttempts
+          console.log('Failing permanently!');
+          @_errorProcessing files, response || @options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr
+        else
+          file.uploadAttempt++
+          console.log('Starting attempt: '+file.uploadAttempt+'/'+@options.uploadAttempts+' time...')
+          #setTimeout (=> @emit "autoretry", file), 0
+          setTimeout (=> @uploadFile file), 1000
+          
+
+
 
 
     updateProgress = (e) =>
@@ -1314,7 +1334,7 @@ Dropzone.forElement = (element) ->
 
 
 # Set to false if you don't want Dropzone to automatically find and attach to .dropzone elements.
-Dropzone.autoDiscover = on
+Dropzone.autoDiscover = off
 
 # Looks for all .dropzone elements and creates a dropzone for them
 Dropzone.discover = ->
