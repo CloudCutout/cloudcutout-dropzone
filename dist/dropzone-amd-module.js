@@ -123,7 +123,7 @@
         dropzone.on("dragEnter", function() { });
      */
 
-    Dropzone.prototype.events = ["drop", "dragstart", "dragend", "dragenter", "dragover", "dragleave", "addedfile", "addedfiles", "removedfile", "thumbnail", "autoretry", "error", "errormultiple", "processing", "processingmultiple", "uploadprogress", "totaluploadprogress", "sending", "sendingmultiple", "success", "successmultiple", "canceled", "canceledmultiple", "complete", "completemultiple", "reset", "maxfilesexceeded", "maxfilesreached", "queuecomplete"];
+    Dropzone.prototype.events = ["drop", "dragstart", "dragend", "dragenter", "dragover", "dragleave", "addedfile", "addedfiles", "removedfile", "thumbnail", "autoretry", "reject", "error", "errormultiple", "processing", "processingmultiple", "uploadprogress", "totaluploadprogress", "sending", "sendingmultiple", "success", "successmultiple", "canceled", "canceledmultiple", "complete", "completemultiple", "reset", "maxfilesexceeded", "maxfilesreached", "queuecomplete"];
 
     Dropzone.prototype.defaultOptions = {
       url: null,
@@ -338,6 +338,8 @@
           })(this)), 1);
         }
       },
+      autoretry: noop,
+      reject: noop,
       error: function(file, message) {
         var node, _i, _len, _ref, _results;
         if (file.previewElement) {
@@ -583,15 +585,18 @@
             _this.hiddenFileInput.style.width = "0";
             document.querySelector(_this.options.hiddenInputContainer).appendChild(_this.hiddenFileInput);
             return _this.hiddenFileInput.addEventListener("change", function() {
-              var file, files, _i, _len;
+              var file, files, filesBefore, _i, _len;
               files = _this.hiddenFileInput.files;
+              filesBefore = _this.files.length;
               if (files.length) {
                 for (_i = 0, _len = files.length; _i < _len; _i++) {
                   file = files[_i];
                   _this.addFile(file);
                 }
               }
-              _this.emit("addedfiles", files);
+              if (_this.files.length > filesBefore) {
+                _this.emit("addedfiles", files);
+              }
               return setupHiddenFileInput();
             });
           };
@@ -994,28 +999,29 @@
     };
 
     Dropzone.prototype.addFile = function(file) {
-      file.upload = {
-        progress: 0,
-        total: file.size,
-        bytesSent: 0
-      };
-      this.files.push(file);
-      file.status = Dropzone.ADDED;
-      file.uploadAttempt = 1;
-      this.emit("addedfile", file);
-      this._enqueueThumbnail(file);
       return this.accept(file, (function(_this) {
         return function(error) {
           if (error) {
             file.accepted = false;
-            _this._errorProcessing([file], error);
+            file.status = Dropzone.REJECTED;
+            return _this.emit("reject", file, error);
           } else {
             file.accepted = true;
+            file.upload = {
+              progress: 0,
+              total: file.size,
+              bytesSent: 0
+            };
+            file.status = Dropzone.ADDED;
+            file.uploadAttempt = 1;
+            _this.files.push(file);
+            _this.emit("addedfile", file);
+            _this._enqueueThumbnail(file);
             if (_this.options.autoQueue) {
               _this.enqueueFile(file);
             }
+            return _this._updateMaxFilesReachedClass();
           }
-          return _this._updateMaxFilesReachedClass();
         };
       })(this));
     };
@@ -1271,12 +1277,11 @@
           for (_j = 0, _len1 = files.length; _j < _len1; _j++) {
             file = files[_j];
             if (file.uploadAttempt >= _this.options.uploadAttempts) {
-              console.log('Failing permanently!');
               _results.push(_this._errorProcessing(files, response || _this.options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr));
             } else {
               file.uploadAttempt++;
-              console.log('Starting attempt: ' + file.uploadAttempt + '/' + _this.options.uploadAttempts + ' time...');
               _results.push(setTimeout((function() {
+                _this.emit("autoretry", file, response || _this.options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr);
                 return _this.uploadFile(file);
               }), 1000));
             }
@@ -1676,6 +1681,8 @@
   Dropzone.PROCESSING = Dropzone.UPLOADING;
 
   Dropzone.CANCELED = "canceled";
+
+  Dropzone.REJECTED = "rejected";
 
   Dropzone.ERROR = "error";
 
