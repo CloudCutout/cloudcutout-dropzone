@@ -14,11 +14,11 @@ module.exports = (grunt) ->
           "dist/dropzone.css": "src/dropzone.scss"
         ]
       compressed:
-        options:
-          style: 'compressed'
+#        options:
+#            style: 'compressed'
         files: [
           "dist/min/basic.min.css": "src/basic.scss"
-          "dist/min/dropzone.min.css": "src/dropzone.scss"
+          "dist/min/cloudcutout-dropzone.min.css": "src/cloudcutout-dropzone.scss"
         ]
 
     coffee:
@@ -43,7 +43,7 @@ module.exports = (grunt) ->
         files: [
           "src/dropzone.coffee"
         ]
-        tasks: [ "js" ]
+        tasks: [ "js", "uglify" ]
         options: nospawn: on
       test:
         files: [
@@ -55,7 +55,7 @@ module.exports = (grunt) ->
         files: [
           "src/*.scss"
         ]
-        tasks: [ "css" ]
+        tasks: [ "css", "uglify"]
         options: nospawn: on
 
     uglify:
