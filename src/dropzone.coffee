@@ -956,9 +956,6 @@ class Dropzone extends Emitter
         
       console.log 'Image loaded: ', img
       callback file
-    ,
-      maxWidth: 2000
-      minWidth: 1000
 
 
 
@@ -1071,37 +1068,21 @@ class Dropzone extends Emitter
     fileReader.readAsDataURL file
 
   createThumbnailFromUrl: (file, imageUrl, callback, crossOrigin) ->
-    # Not using `new Image` here because of a bug in latest Chrome versions.
-    # See https://github.com/enyo/dropzone/pull/226
-    img = document.createElement "img"
+    LoadImage.parseMetaData file, (data) =>
+      options = 
+        canvas: on
+        maxWidth: @options.thumbnailWidth
+        maxHeight: @options.thumbnailHeight
+        crop: on
+        crossOrigin: crossOrigin
+        orientation: data.exif.get 'Orientation' if data.exif?
 
-    img.crossOrigin = crossOrigin if crossOrigin
-
-    img.onload = =>
-      file.width = img.width
-      file.height = img.height
-
-      resizeInfo = @options.resize.call @, file
-
-      resizeInfo.trgWidth ?= resizeInfo.optWidth
-      resizeInfo.trgHeight ?= resizeInfo.optHeight
-
-      canvas = document.createElement "canvas"
-      ctx = canvas.getContext "2d"
-      canvas.width = resizeInfo.trgWidth
-      canvas.height = resizeInfo.trgHeight
-
-      # This is a bugfix for iOS' scaling bug.
-      drawImageIOSFix ctx, img, resizeInfo.srcX ? 0, resizeInfo.srcY ? 0, resizeInfo.srcWidth, resizeInfo.srcHeight, resizeInfo.trgX ? 0, resizeInfo.trgY ? 0, resizeInfo.trgWidth, resizeInfo.trgHeight
-
-      thumbnail = canvas.toDataURL "image/png"
-
-      @emit "thumbnail", file, thumbnail
-      callback() if callback?
-
-    img.onerror = callback if callback?
-
-    img.src = imageUrl
+      LoadImage imageUrl, (canvas) =>
+        if canvas.type != 'error'
+          thumbnail = canvas.toDataURL "image/png"
+          @emit "thumbnail", file, thumbnail
+        callback() if callback?
+      , options
 
 
   # Goes through the queue and processes files if there aren't too many already.
