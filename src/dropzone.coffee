@@ -138,6 +138,7 @@ class Dropzone extends Emitter
     uploadAttempts: 3
     uploadMultiple: no # Whether to send multiple files in one request.
     maxFilesize: 100 # in MB
+    maxImageSize: 50 # in megapixels
     paramName: "file" # The name of the file param that gets transferred.
     createImageThumbnails: true
     maxThumbnailFilesize: 10 # in MB. When the filename exceeds this limit, the thumbnail will not be generated.
@@ -255,6 +256,8 @@ class Dropzone extends Emitter
     # Displayed when the maxFiles have been exceeded
     # You can use {{maxFiles}} here, which will be replaced by the option.
     dictMaxFilesExceeded: "You can not upload any more files."
+
+    dictMaxImageSizeExceeded: "The image exceeds the maximum allowed resolution of {{maxImageSize}} megapixels."
 
 
     # If `done()` is called without argument the file is accepted
@@ -518,8 +521,8 @@ class Dropzone extends Emitter
                             <div class="dz-filename"><span data-dz-name></span></div>
                         </div>
                         <div class="dz-details-overlay">
-                            <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
-                            <div class="dz-error-mark"><i class="fa fa-exclamation-triangle"></i></div>
+                        <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                            <div class="dz-error-mark"><i class="fa fa-exclamation-triangle"></i></div> 
                         </div>
                         <div class="dz-details-popup">
                             <table>
@@ -943,6 +946,21 @@ class Dropzone extends Emitter
 
     readEntries()
 
+  # Appends imageData property to the file object if it's an image
+  addImageData: (file, callback) ->
+    LoadImage file, (img) ->
+      if img.type != 'error'
+        file.imageData = 
+          image: img
+          width: img.naturalWidth
+          height: img.naturalHeight
+        
+      console.log 'Image loaded: ', img
+      callback file
+    ,
+      maxWidth: 2000
+      minWidth: 1000
+
 
 
   # If `done()` is called without argument the file is accepted
@@ -959,10 +977,17 @@ class Dropzone extends Emitter
     else if @options.maxFiles? and @getAcceptedFiles().length >= @options.maxFiles
       done @options.dictMaxFilesExceeded.replace "{{maxFiles}}", @options.maxFiles
       @emit "maxfilesexceeded", file
+    else if file.imageData and @options.maxImageSize and file.imageData.width*file.imageData.height > @options.maxImageSize * 1000000
+      done @options.dictMaxImageSizeExceeded.replace "{{maxImageSize}}", @options.maxImageSize
+      @emit "maximagesizeexceeded", file
     else
       @options.accept.call this, file, done
 
   addFile: (file) ->
+    @addImageData file, =>
+      @_addFile file
+
+  _addFile: (file) ->
 
     @accept file, (error) =>
       if error
