@@ -439,7 +439,11 @@ class Dropzone extends Emitter
 
     # Called whenever a file is rejected
     # Receives `file` and `message`
-    reject: noop
+    reject: (file, message) -> 
+      if file.previewElement
+        file.previewElement.classList.add "dz-reject"
+        message = message.error if typeof message != "String" and message.error
+        node.textContent = message for node in file.previewElement.querySelectorAll("[data-dz-errormessage]")
 
 
     # Called whenever an error occurs
@@ -526,7 +530,8 @@ class Dropzone extends Emitter
                             </div>
                         </div>
                         <div class="dz-details-overlay">
-                        <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                            <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                            <div class="dz-reject-mark"><i class="fa fa-ban"></i></div>
                             <div class="dz-error-mark"><i class="fa fa-exclamation-triangle"></i></div> 
                         </div>
                         <div class="dz-details-popup">

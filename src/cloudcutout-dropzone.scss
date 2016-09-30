@@ -117,6 +117,16 @@ $thumbnailHeight: 60px;
         }
     }
 
+    .dz-progress {
+      display: none;
+    }
+
+    &.dz-processing {
+      .dz-progress {
+        display: block;
+      }
+    }
+
     // remove overlay on success
     &.dz-success {
       .dz-details-overlay {
@@ -164,8 +174,13 @@ $thumbnailHeight: 60px;
     }
 
 
-    .dz-success-mark, .dz-error-mark, .dz-error-message {
+    .dz-success-mark, .dz-reject-mark, .dz-error-mark, .dz-error-message {
       display: none;
+    }
+
+    &.dz-reject .dz-reject-mark {
+      display: block;
+      color: #e0e000;
     }
 
 
@@ -174,8 +189,10 @@ $thumbnailHeight: 60px;
         color: red;
     }
 
-    &.dz-error .dz-error-message {
-      display: block;
+    &.dz-error, &.dz-reject {
+       .dz-error-message {
+          display: block;
+       }
     }
 }
 
