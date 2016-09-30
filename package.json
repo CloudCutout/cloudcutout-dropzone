@@ -41,13 +41,17 @@
     "type": "git",
     "url": "https://github.com/enyo/dropzone.git"
   },
-  "dependencies": {},
+  "dependencies": {
+    "blueimp-load-image": "^2.6.2"
+  },
   "devDependencies": {
     "chai": "1.7.x",
+    "coffeeify": "^2.0.1",
     "express": "^4.14.0",
     "formidable": "^1.0.17",
     "grunt": "^0.4.4",
-    "grunt-contrib-coffee": "^0.10.1",
+    "grunt-browserify": "^5.0.0",
+    "grunt-contrib-coffee": "^1.0.0",
     "grunt-contrib-concat": "^0.4.0",
     "grunt-contrib-sass": "^0.8.1",
     "grunt-contrib-uglify": "^0.4.0",

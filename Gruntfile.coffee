@@ -21,6 +21,7 @@ module.exports = (grunt) ->
           "dist/min/cloudcutout-dropzone.min.css": "src/cloudcutout-dropzone.scss"
         ]
 
+    # old build taks
     coffee:
       default:
         files:
@@ -38,6 +39,16 @@ module.exports = (grunt) ->
         ]
         dest: "dist/dropzone-amd-module.js"
 
+    browserify:
+      dist:
+        files:
+          "dist/dropzone.js": [ "src/dropzone.coffee" ]
+        options:
+          browserifyOptions: {
+            standalone: 'Dropzone'
+          },
+          transform: [ "coffeeify" ]
+    
     watch:
       js:
         files: [
@@ -61,14 +72,16 @@ module.exports = (grunt) ->
     uglify:
       js:
         files: [
-          "dist/min/dropzone-amd-module.min.js": "dist/dropzone-amd-module.js"
+          #"dist/min/dropzone-amd-module.min.js": "dist/dropzone-amd-module.js"
           "dist/min/dropzone.min.js": "dist/dropzone.js"
         ]
 
 
 
+
   grunt.loadNpmTasks "grunt-contrib-coffee"
   grunt.loadNpmTasks "grunt-contrib-sass"
+  grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks "grunt-contrib-concat"
   grunt.loadNpmTasks "grunt-contrib-watch"
   grunt.loadNpmTasks "grunt-contrib-uglify"
@@ -78,6 +91,7 @@ module.exports = (grunt) ->
 
   grunt.registerTask "css", "Compile the sass files to css", [ "sass" ]
 
-  grunt.registerTask "js", "Compile coffeescript", [ "coffee", "concat" ]
+  #grunt.registerTask "js", "Compile coffeescript", [ "coffee", "concat" ]
+  grunt.registerTask "js", "Compile coffeescript", [ "browserify" ]
 
   grunt.registerTask "downloads", "Compile all stylus and coffeescript files and generate the download files", [ "js", "css", "uglify" ]

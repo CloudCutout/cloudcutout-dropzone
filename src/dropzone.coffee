@@ -24,6 +24,7 @@
 #
 ###
 
+LoadImage = require 'blueimp-load-image'
 
 noop = ->
 
@@ -1491,11 +1492,7 @@ if jQuery?
 
 
 
-if module?
-  module.exports = Dropzone
-else
-  window.Dropzone = Dropzone
-
+module.exports = Dropzone
 
 
 
