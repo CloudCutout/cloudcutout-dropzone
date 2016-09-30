@@ -518,7 +518,6 @@ class Dropzone extends Emitter
                                 <img data-dz-thumbnail />
                                 <div class="dz-thumbnail-icon"><i class="fa fa-file-image-o fa-2x"></i></div>
                             </div>
-                            <div class="dz-filename"><span data-dz-name></span></div>
                         </div>
                         <div class="dz-details-overlay">
                         <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>

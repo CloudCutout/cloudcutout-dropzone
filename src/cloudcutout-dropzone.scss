@@ -1,4 +1,5 @@
 $thumbnailWidth: 60px;
+$thumbnailHeight: 60px;
 
 .non-break {
   white-space: nowrap;
@@ -38,12 +39,12 @@ $thumbnailWidth: 60px;
   .dz-preview {
     display: inline-block;
     position: relative;
-    margin: 10px;
+    margin: 5px;
     padding: 3px;
     background: white;
     width: $thumbnailWidth;
+    height: $thumbnailHeight;
     box-shadow: 4px 4px 5px 0px #646464;
-    border: 1px solid #646464;
 
     &:hover {
       .dz-details-popup {
@@ -58,6 +59,7 @@ $thumbnailWidth: 60px;
     }
 
     .dz-details {
+
       .dz-filename {
         font-size: 10px;
         font-family: monospace;
@@ -68,14 +70,23 @@ $thumbnailWidth: 60px;
 
     .dz-thumbnail-icon {
       display: none;
-      text-align: center;
-
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+      align-items: center;
     }
 
     // show image icon until thumbnail has been loaded
     &.dz-file-preview {
+      .dz-image img {
+        display: none;
+      }
+
       .dz-thumbnail-icon {
-          display: block;
+          display: flex;
       }
     }
 
