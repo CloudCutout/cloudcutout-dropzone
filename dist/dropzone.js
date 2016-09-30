@@ -2354,9 +2354,6 @@ Dropzone = (function(superClass) {
       }
       console.log('Image loaded: ', img);
       return callback(file);
-    }, {
-      maxWidth: 2000,
-      minWidth: 1000
     });
   };
 
@@ -2509,39 +2506,29 @@ Dropzone = (function(superClass) {
   };
 
   Dropzone.prototype.createThumbnailFromUrl = function(file, imageUrl, callback, crossOrigin) {
-    var img;
-    img = document.createElement("img");
-    if (crossOrigin) {
-      img.crossOrigin = crossOrigin;
-    }
-    img.onload = (function(_this) {
-      return function() {
-        var canvas, ctx, ref, ref1, ref2, ref3, resizeInfo, thumbnail;
-        file.width = img.width;
-        file.height = img.height;
-        resizeInfo = _this.options.resize.call(_this, file);
-        if (resizeInfo.trgWidth == null) {
-          resizeInfo.trgWidth = resizeInfo.optWidth;
-        }
-        if (resizeInfo.trgHeight == null) {
-          resizeInfo.trgHeight = resizeInfo.optHeight;
-        }
-        canvas = document.createElement("canvas");
-        ctx = canvas.getContext("2d");
-        canvas.width = resizeInfo.trgWidth;
-        canvas.height = resizeInfo.trgHeight;
-        drawImageIOSFix(ctx, img, (ref = resizeInfo.srcX) != null ? ref : 0, (ref1 = resizeInfo.srcY) != null ? ref1 : 0, resizeInfo.srcWidth, resizeInfo.srcHeight, (ref2 = resizeInfo.trgX) != null ? ref2 : 0, (ref3 = resizeInfo.trgY) != null ? ref3 : 0, resizeInfo.trgWidth, resizeInfo.trgHeight);
-        thumbnail = canvas.toDataURL("image/png");
-        _this.emit("thumbnail", file, thumbnail);
-        if (callback != null) {
-          return callback();
-        }
+    return LoadImage.parseMetaData(file, (function(_this) {
+      return function(data) {
+        var options;
+        options = {
+          canvas: true,
+          maxWidth: _this.options.thumbnailWidth,
+          maxHeight: _this.options.thumbnailHeight,
+          crop: true,
+          crossOrigin: crossOrigin,
+          orientation: data.exif != null ? data.exif.get('Orientation') : void 0
+        };
+        return LoadImage(imageUrl, function(canvas) {
+          var thumbnail;
+          if (canvas.type !== 'error') {
+            thumbnail = canvas.toDataURL("image/png");
+            _this.emit("thumbnail", file, thumbnail);
+          }
+          if (callback != null) {
+            return callback();
+          }
+        }, options);
       };
-    })(this);
-    if (callback != null) {
-      img.onerror = callback;
-    }
-    return img.src = imageUrl;
+    })(this));
   };
 
   Dropzone.prototype.processQueue = function() {
