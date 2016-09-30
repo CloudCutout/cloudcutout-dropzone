@@ -1489,6 +1489,7 @@ Dropzone = (function(superClass) {
     uploadAttempts: 3,
     uploadMultiple: false,
     maxFilesize: 100,
+    maxImageSize: 50,
     paramName: "file",
     createImageThumbnails: true,
     maxThumbnailFilesize: 10,
@@ -1519,6 +1520,7 @@ Dropzone = (function(superClass) {
     dictRemoveFile: "Remove file",
     dictRemoveFileConfirmation: null,
     dictMaxFilesExceeded: "You can not upload any more files.",
+    dictMaxImageSizeExceeded: "The image exceeds the maximum allowed resolution of {{maxImageSize}} megapixels.",
     accept: function(file, done) {
       return done();
     },
@@ -1769,7 +1771,7 @@ Dropzone = (function(superClass) {
     maxfilesreached: noop,
     queuecomplete: noop,
     addedfiles: noop,
-    previewTemplate: "  <div class=\"dz-preview dz-file-preview\">\n    <div class=\"dz-details\">\n        <div class=\"dz-image\">\n            <img data-dz-thumbnail />\n            <div class=\"dz-thumbnail-icon\"><i class=\"fa fa-file-image-o fa-2x\"></i></div>\n        </div>\n        <div class=\"dz-filename\"><span data-dz-name></span></div>\n    </div>\n    <div class=\"dz-details-overlay\">\n        <div class=\"dz-progress\"><span class=\"dz-upload\" data-dz-uploadprogress></span></div>\n        <div class=\"dz-error-mark\"><i class=\"fa fa-exclamation-triangle\"></i></div>\n    </div>\n    <div class=\"dz-details-popup\">\n        <table>\n            <tr>\n                <td>Filename</td>\n                <td class=\"dz-filename\" data-dz-name></td>\n            </tr>\n            <tr>\n                <td>Size</td>\n                <td class=\"dz-size\" data-dz-size></td>\n            </tr>\n            <tr>\n                <td>Status</td>\n                <td>\n                    <div class=\"dz-progress\" class=\"non-break\">Uploading...&nbsp;<span data-dz-uploadprogress-percent>0</span>%</div>\n                    <div class=\"dz-success-mark\">File uploaded successfully</div>\n                    <div class=\"dz-error-message\">Error:&nbsp;<span data-dz-errormessage></span></div>\n                </td>\n            </tr>\n        </table>\n    </div>\n</div>"
+    previewTemplate: "  <div class=\"dz-preview dz-file-preview\">\n    <div class=\"dz-details\">\n        <div class=\"dz-image\">\n            <img data-dz-thumbnail />\n            <div class=\"dz-thumbnail-icon\"><i class=\"fa fa-file-image-o fa-2x\"></i></div>\n        </div>\n    </div>\n    <div class=\"dz-details-overlay\">\n    <div class=\"dz-progress\"><span class=\"dz-upload\" data-dz-uploadprogress></span></div>\n        <div class=\"dz-error-mark\"><i class=\"fa fa-exclamation-triangle\"></i></div> \n    </div>\n    <div class=\"dz-details-popup\">\n        <table>\n            <tr>\n                <td>Filename</td>\n                <td class=\"dz-filename\" data-dz-name></td>\n            </tr>\n            <tr>\n                <td>Size</td>\n                <td class=\"dz-size\" data-dz-size></td>\n            </tr>\n            <tr>\n                <td>Status</td>\n                <td>\n                    <div class=\"dz-progress\" class=\"non-break\">Uploading...&nbsp;<span data-dz-uploadprogress-percent>0</span>%</div>\n                    <div class=\"dz-success-mark\">File uploaded successfully</div>\n                    <div class=\"dz-error-message\">Error:&nbsp;<span data-dz-errormessage></span></div>\n                </td>\n            </tr>\n        </table>\n    </div>\n</div>"
   };
 
   extend = function() {
@@ -2341,6 +2343,23 @@ Dropzone = (function(superClass) {
     return readEntries();
   };
 
+  Dropzone.prototype.addImageData = function(file, callback) {
+    return LoadImage(file, function(img) {
+      if (img.type !== 'error') {
+        file.imageData = {
+          image: img,
+          width: img.naturalWidth,
+          height: img.naturalHeight
+        };
+      }
+      console.log('Image loaded: ', img);
+      return callback(file);
+    }, {
+      maxWidth: 2000,
+      minWidth: 1000
+    });
+  };
+
   Dropzone.prototype.accept = function(file, done) {
     if (file.size > this.options.maxFilesize * 1024 * 1024) {
       return done(this.options.dictFileTooBig.replace("{{filesize}}", Math.round(file.size / 1024 / 10.24) / 100).replace("{{maxFilesize}}", this.options.maxFilesize));
@@ -2349,12 +2368,23 @@ Dropzone = (function(superClass) {
     } else if ((this.options.maxFiles != null) && this.getAcceptedFiles().length >= this.options.maxFiles) {
       done(this.options.dictMaxFilesExceeded.replace("{{maxFiles}}", this.options.maxFiles));
       return this.emit("maxfilesexceeded", file);
+    } else if (file.imageData && this.options.maxImageSize && file.imageData.width * file.imageData.height > this.options.maxImageSize * 1000000) {
+      done(this.options.dictMaxImageSizeExceeded.replace("{{maxImageSize}}", this.options.maxImageSize));
+      return this.emit("maximagesizeexceeded", file);
     } else {
       return this.options.accept.call(this, file, done);
     }
   };
 
   Dropzone.prototype.addFile = function(file) {
+    return this.addImageData(file, (function(_this) {
+      return function() {
+        return _this._addFile(file);
+      };
+    })(this));
+  };
+
+  Dropzone.prototype._addFile = function(file) {
     return this.accept(file, (function(_this) {
       return function(error) {
         if (error) {
