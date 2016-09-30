@@ -180,6 +180,10 @@ class Dropzone extends Emitter
     # for a reference.
     acceptedFiles: null
 
+    # If this is option is set, only images will be accepted.
+    # If enabled the acceptedFiles and accept properties are ignored
+    acceptImagesOnly: off
+
     # @deprecated
     # Use acceptedFiles instead.
     acceptedMimeTypes: null
@@ -237,6 +241,8 @@ class Dropzone extends Emitter
 
     # If the file doesn't match the file type.
     dictInvalidFileType: "You can't upload files of this type."
+
+    dictNotImageFile: "The file must be an image."
 
     # If the server response was invalid.
     dictResponseError: "Server responded with {{statusCode}} code."
@@ -973,6 +979,8 @@ class Dropzone extends Emitter
     else if @options.maxFiles? and @getAcceptedFiles().length >= @options.maxFiles
       done @options.dictMaxFilesExceeded.replace "{{maxFiles}}", @options.maxFiles
       @emit "maxfilesexceeded", file
+    else if @options.acceptImagesOnly and not file.imageData
+      done @options.dictNotImageFile
     else if file.imageData and @options.maxImageSize and file.imageData.width*file.imageData.height > @options.maxImageSize * 1000000
       done @options.dictMaxImageSizeExceeded.replace "{{maxImageSize}}", @options.maxImageSize
       @emit "maximagesizeexceeded", file
@@ -980,33 +988,33 @@ class Dropzone extends Emitter
       @options.accept.call this, file, done
 
   addFile: (file) ->
-    @addImageData file, =>
-      @_addFile file
+    file.upload =
+      progress: 0
+      # Setting the total upload size to file.size for the beginning
+      # It's actual different than the size to be transmitted.
+      total: file.size
+      bytesSent: 0
 
-  _addFile: (file) ->
+    file.status = Dropzone.ADDED
+    @files.push file
+    @emit "addedfile", file
 
-    @accept file, (error) =>
-      if error
-        file.accepted = false
-        file.status = Dropzone.REJECTED
-        @emit "reject", file, error
-      else
-        file.accepted = true
-
-        file.upload =
-          progress: 0
-          # Setting the total upload size to file.size for the beginning
-          # It's actual different than the size to be transmitted.
-          total: file.size
-          bytesSent: 0
-
-        file.status = Dropzone.ADDED
-        file.uploadAttempt = 1 # the first upload attempt
-        @files.push file
-        @emit "addedfile", file
-        @_enqueueThumbnail file
-        @enqueueFile file if @options.autoQueue # Will set .accepted = true
-        @_updateMaxFilesReachedClass()
+    # check if the file can be accepted
+    # defer the accept check 100ms to interleave handling of addedfile events
+    setTimeout => 
+      @addImageData file, =>
+        @accept file, (error) =>
+          if error
+            file.accepted = false
+            file.status = Dropzone.REJECTED
+            @emit "reject", file, error
+          else
+            file.accepted = true
+            @_enqueueThumbnail file
+            @enqueueFile file if @options.autoQueue # Will set .accepted = true
+            @_updateMaxFilesReachedClass()
+    , 100
+        
 
   # Wrapper for enqueueFile
   enqueueFiles: (files) -> @enqueueFile file for file in files; null
@@ -1014,6 +1022,7 @@ class Dropzone extends Emitter
   enqueueFile: (file) ->
     if file.status == Dropzone.ADDED and file.accepted == true
       file.status = Dropzone.QUEUED
+      file.uploadAttempt = 1 # the first upload attempt
       if @options.autoProcessQueue
         setTimeout (=> @processQueue()), 0 # Deferring the call
     else
