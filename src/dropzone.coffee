@@ -104,10 +104,11 @@ class Dropzone extends Emitter
     "dragleave"
     "addedfile"
     "addedfiles"
+    "acceptedfile"
     "removedfile"
     "thumbnail"
     "autoretry"
-    "reject"
+    "rejectedfile"
     "error"
     "errormultiple"
     "processing"
@@ -420,6 +421,8 @@ class Dropzone extends Emitter
         removeLink.addEventListener "click", removeFileEvent for removeLink in file.previewElement.querySelectorAll("[data-dz-remove]")
 
 
+    acceptedfile: noop
+
     # Called whenever a file is removed.
     removedfile: (file) ->
       file.previewElement?.parentNode.removeChild file.previewElement if file.previewElement
@@ -442,7 +445,7 @@ class Dropzone extends Emitter
 
     # Called whenever a file is rejected
     # Receives `file` and `message`
-    reject: (file, message) -> 
+    rejectedfile: (file, message) -> 
       if file.previewElement
         file.previewElement.classList.add "dz-reject"
         message = message.error if typeof message != "String" and message.error
@@ -1026,11 +1029,12 @@ class Dropzone extends Emitter
           if error
             file.accepted = false
             file.status = Dropzone.REJECTED
-            @emit "reject", file, error
+            @emit "rejectedfile", file, error
           else
             file.accepted = true
             @_enqueueThumbnail file
             @enqueueFile file if @options.autoQueue
+            @emit "acceptedfile", file
           @_checkingFile = undefined
           setTimeout (=> @processAcceptQueue()), 50 # Deferring the call
 
