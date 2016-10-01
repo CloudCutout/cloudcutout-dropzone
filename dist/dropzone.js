@@ -1488,6 +1488,7 @@ Dropzone = (function(superClass) {
     parallelUploads: 5,
     uploadAttempts: 7,
     uploadMultiple: false,
+    requireUniqueFilename: true,
     maxFilesize: 100,
     maxImageSize: 50,
     paramName: "file",
@@ -1516,6 +1517,7 @@ Dropzone = (function(superClass) {
     dictFileTooBig: "File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.",
     dictInvalidFileType: "You can't upload files of this type.",
     dictNotImageFile: "The file must be an image.",
+    dictFilenameNotUnique: "A file with the name {{filename}} has already been added.",
     dictResponseError: "Server responded with {{statusCode}} code.",
     dictCancelUpload: "Cancel upload",
     dictCancelUploadConfirmation: "Are you sure you want to cancel this upload?",
@@ -2375,7 +2377,11 @@ Dropzone = (function(superClass) {
   };
 
   Dropzone.prototype.accept = function(file, done) {
-    if (file.size > this.options.maxFilesize * 1024 * 1024) {
+    if (this.options.requireUniqueFilename && (this.files.filter(function(f) {
+      return f.name === file.name && f.accepted;
+    })).length > 0) {
+      return done(this.options.dictFilenameNotUnique.replace("{{filename}}", file.name));
+    } else if (file.size > this.options.maxFilesize * 1024 * 1024) {
       return done(this.options.dictFileTooBig.replace("{{filesize}}", Math.round(file.size / 1024 / 10.24) / 100).replace("{{maxFilesize}}", this.options.maxFilesize));
     } else if (!Dropzone.isValidFile(file, this.options.acceptedFiles)) {
       return done(this.options.dictInvalidFileType);
