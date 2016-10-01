@@ -76,11 +76,15 @@
           height: 100%;
           width: 0;
           background: #4caf50; }
+    .dropzone .dz-preview .dz-progress {
+      display: none; }
+    .dropzone .dz-preview.dz-processing .dz-progress {
+      display: block; }
     .dropzone .dz-preview.dz-success .dz-details-overlay {
       background: transparent; }
     .dropzone .dz-preview.dz-success .dz-success-mark {
       display: block; }
-    .dropzone .dz-preview.dz-success .dz-progress, .dropzone .dz-preview.dz-error .dz-progress {
+    .dropzone .dz-preview.dz-success .dz-progress, .dropzone .dz-preview.dz-error .dz-progress, .dropzone .dz-preview.dz-file-waiting-for-retry .dz-progress {
       display: none; }
     .dropzone .dz-preview .dz-details-popup {
       position: absolute;
@@ -101,10 +105,18 @@
           font-weight: bold; }
         .dropzone .dz-preview .dz-details-popup td:nth-child(2) {
           min-width: 60px; }
-    .dropzone .dz-preview .dz-success-mark, .dropzone .dz-preview .dz-error-mark, .dropzone .dz-preview .dz-error-message {
+    .dropzone .dz-preview .dz-success-mark, .dropzone .dz-preview .dz-spinner, .dropzone .dz-preview .dz-reject-mark, .dropzone .dz-preview .dz-error-mark, .dropzone .dz-preview .dz-error-message, .dropzone .dz-preview .dz-autoretry-message {
       display: none; }
+    .dropzone .dz-preview.dz-reject .dz-reject-mark {
+      display: block;
+      color: #e0e000; }
     .dropzone .dz-preview.dz-error .dz-error-mark {
       display: block;
       color: red; }
-    .dropzone .dz-preview.dz-error .dz-error-message {
+    .dropzone .dz-preview.dz-error .dz-error-message, .dropzone .dz-preview.dz-reject .dz-error-message {
+      display: block; }
+    .dropzone .dz-preview.dz-file-waiting-for-retry .dz-spinner {
+      display: block;
+      color: white; }
+    .dropzone .dz-preview.dz-file-waiting-for-retry .dz-autoretry-message {
       display: block; }
