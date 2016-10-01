@@ -138,7 +138,7 @@ $thumbnailHeight: 60px;
       }
     }
 
-    &.dz-success, &.dz-error {
+    &.dz-success, &.dz-error, &.dz-file-waiting-for-retry {
       .dz-progress {
               display: none;
       }
@@ -174,7 +174,7 @@ $thumbnailHeight: 60px;
     }
 
 
-    .dz-success-mark, .dz-reject-mark, .dz-error-mark, .dz-error-message {
+    .dz-success-mark, .dz-spinner, .dz-reject-mark, .dz-error-mark, .dz-error-message, .dz-autoretry-message {
       display: none;
     }
 
@@ -192,6 +192,17 @@ $thumbnailHeight: 60px;
     &.dz-error, &.dz-reject {
        .dz-error-message {
           display: block;
+       }
+    }
+
+    &.dz-file-waiting-for-retry {
+       .dz-spinner {
+         display: block;
+         color: white;
+       }
+
+       .dz-autoretry-message {
+         display: block;
        }
     }
 }

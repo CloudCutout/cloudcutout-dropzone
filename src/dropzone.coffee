@@ -135,7 +135,7 @@ class Dropzone extends Emitter
     method: "post"
     withCredentials: no
     parallelUploads: 5
-    uploadAttempts: 3
+    uploadAttempts: 7
     uploadMultiple: no # Whether to send multiple files in one request.
     maxFilesize: 100 # in MB
     maxImageSize: 50 # in megapixels
@@ -532,7 +532,8 @@ class Dropzone extends Emitter
                         <div class="dz-details-overlay">
                             <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
                             <div class="dz-reject-mark"><i class="fa fa-ban"></i></div>
-                            <div class="dz-error-mark"><i class="fa fa-exclamation-triangle"></i></div> 
+                            <div class="dz-error-mark"><i class="fa fa-exclamation-triangle"></i></div>
+                            <div class="dz-spinner"><i class="fa fa-refresh fa-spin fa-2x"></i></div> 
                         </div>
                         <div class="dz-details-popup">
                             <table>
@@ -549,6 +550,7 @@ class Dropzone extends Emitter
                                     <td>
                                         <div class="dz-progress" class="non-break">Uploading...&nbsp;<span data-dz-uploadprogress-percent>0</span>%</div>
                                         <div class="dz-success-mark">File uploaded successfully</div>
+                                        <div class="dz-autoretry-message">Upload failed. Waiting a bit before trying again...</div>
                                         <div class="dz-error-message">Error:&nbsp;<span data-dz-errormessage></span></div>
                                     </td>
                                 </tr>
@@ -1200,10 +1202,13 @@ class Dropzone extends Emitter
           @_errorProcessing files, response || @options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr
         else
           file.uploadAttempt++
+          if file.previewElement
+            file.previewElement.classList.add "dz-file-waiting-for-retry"
           setTimeout (=>
             @emit "autoretry", file, response || @options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr
+            file.previewElement.classList.remove "dz-file-waiting-for-retry"
             @uploadFile file
-          ), 1000
+          ), Math.pow(2, file.uploadAttempt-2)*1000 # exponential backoff: 1s, 2s, 4s, 8s, etc. 
           
 
 
