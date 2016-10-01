@@ -1008,7 +1008,7 @@ class Dropzone extends Emitter
 
     # append file to list of files to check for acceptance
     @filesToAccept.push file
-    setTimeout (=> @processAcceptQueue()), 0 # Deferring the call
+    setTimeout (=> @processAcceptQueue()), 50 # Deferring the call
       
   
   processAcceptQueue: ->
@@ -1027,7 +1027,7 @@ class Dropzone extends Emitter
             @_enqueueThumbnail file
             @enqueueFile file if @options.autoQueue
           @_checkingFile = undefined
-          setTimeout (=> @processAcceptQueue()), 0 # Deferring the call
+          setTimeout (=> @processAcceptQueue()), 50 # Deferring the call
 
 
 
