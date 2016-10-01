@@ -572,6 +572,7 @@ class Dropzone extends Emitter
     @clickableElements = [ ]
     @listeners = [ ]
     @files = [] # All files
+    @filesToAccept = [] # Files not yet accepted
 
     @element = document.querySelector @element if typeof @element == "string"
 
@@ -964,8 +965,6 @@ class Dropzone extends Emitter
           image: img
           width: img.naturalWidth
           height: img.naturalHeight
-        
-      console.log 'Image loaded: ', img
       callback file
 
 
@@ -1002,12 +1001,20 @@ class Dropzone extends Emitter
 
     file.status = Dropzone.ADDED
     @files.push file
+    
     @emit "addedfile", file
 
-    # check if the file can be accepted
-    # defer the accept check 100ms to interleave handling of addedfile events
-    setTimeout => 
-      @addImageData file, =>
+    # append file to list of files to check for acceptance
+    @filesToAccept.push file
+    setTimeout (=> @processAcceptQueue()), 0 # Deferring the call
+      
+  
+  processAcceptQueue: ->
+     return if @_checkingFile or @filesToAccept.length == 0
+
+     @_checkingFile = file = @filesToAccept.shift()
+
+     @addImageData file, =>
         @accept file, (error) =>
           if error
             file.accepted = false
@@ -1016,10 +1023,11 @@ class Dropzone extends Emitter
           else
             file.accepted = true
             @_enqueueThumbnail file
-            @enqueueFile file if @options.autoQueue # Will set .accepted = true
-            @_updateMaxFilesReachedClass()
-    , 100
-        
+            @enqueueFile file if @options.autoQueue
+          @_checkingFile = undefined
+          setTimeout (=> @processAcceptQueue()), 0 # Deferring the call
+
+
 
   # Wrapper for enqueueFile
   enqueueFiles: (files) -> @enqueueFile file for file in files; null
