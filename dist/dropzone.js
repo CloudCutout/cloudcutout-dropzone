@@ -1479,7 +1479,7 @@ Dropzone = (function(superClass) {
       dropzone.on("dragEnter", function() { });
    */
 
-  Dropzone.prototype.events = ["drop", "dragstart", "dragend", "dragenter", "dragover", "dragleave", "addedfile", "addedfiles", "removedfile", "thumbnail", "autoretry", "reject", "error", "errormultiple", "processing", "processingmultiple", "uploadprogress", "totaluploadprogress", "sending", "sendingmultiple", "success", "successmultiple", "canceled", "canceledmultiple", "complete", "completemultiple", "reset", "maxfilesexceeded", "maxfilesreached", "queuecomplete"];
+  Dropzone.prototype.events = ["drop", "dragstart", "dragend", "dragenter", "dragover", "dragleave", "addedfile", "addedfiles", "acceptedfile", "removedfile", "thumbnail", "autoretry", "rejectedfile", "error", "errormultiple", "processing", "processingmultiple", "uploadprogress", "totaluploadprogress", "sending", "sendingmultiple", "success", "successmultiple", "canceled", "canceledmultiple", "complete", "completemultiple", "reset", "maxfilesexceeded", "maxfilesreached", "queuecomplete"];
 
   Dropzone.prototype.defaultOptions = {
     url: null,
@@ -1674,6 +1674,7 @@ Dropzone = (function(superClass) {
         return results;
       }
     },
+    acceptedfile: noop,
     removedfile: function(file) {
       var ref;
       if (file.previewElement) {
@@ -1701,7 +1702,7 @@ Dropzone = (function(superClass) {
       }
     },
     autoretry: noop,
-    reject: function(file, message) {
+    rejectedfile: function(file, message) {
       var j, len, node, ref, results;
       if (file.previewElement) {
         file.previewElement.classList.add("dz-reject");
@@ -2427,13 +2428,14 @@ Dropzone = (function(superClass) {
           if (error) {
             file.accepted = false;
             file.status = Dropzone.REJECTED;
-            _this.emit("reject", file, error);
+            _this.emit("rejectedfile", file, error);
           } else {
             file.accepted = true;
             _this._enqueueThumbnail(file);
             if (_this.options.autoQueue) {
               _this.enqueueFile(file);
             }
+            _this.emit("acceptedfile", file);
           }
           _this._checkingFile = void 0;
           return setTimeout((function() {
