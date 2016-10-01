@@ -16,7 +16,7 @@
     <script>
         console.log('Initializing dropzone...');
         var dz = new Dropzone("#dropzoneContainer", {
-            /*init: function() {
+            init: function() {
                 var that = this;
                 console.log('DEBUG: Adding event handlers for all events...');
                 this.events.forEach(function(e){
@@ -29,10 +29,9 @@
             accept: function(file, done) {
                 return done();
             },
-            */
+            
             autoProcessQueue: true,
             acceptImagesOnly: true,
-            createImageThumbnails: false
 
         });
 
