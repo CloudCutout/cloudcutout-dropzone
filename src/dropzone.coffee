@@ -137,6 +137,7 @@ class Dropzone extends Emitter
     parallelUploads: 5
     uploadAttempts: 7
     uploadMultiple: no # Whether to send multiple files in one request.
+    requireUniqueFilename: on # Whether multiple files with same file name is allowed
     maxFilesize: 100 # in MB
     maxImageSize: 50 # in megapixels
     paramName: "file" # The name of the file param that gets transferred.
@@ -243,6 +244,8 @@ class Dropzone extends Emitter
     dictInvalidFileType: "You can't upload files of this type."
 
     dictNotImageFile: "The file must be an image."
+
+    dictFilenameNotUnique: "A file with the name {{filename}} has already been added."
 
     # If the server response was invalid.
     dictResponseError: "Server responded with {{statusCode}} code."
@@ -978,7 +981,9 @@ class Dropzone extends Emitter
   # This function checks the filesize, and if the file.type passes the
   # `acceptedFiles` check.
   accept: (file, done) ->
-    if file.size > @options.maxFilesize * 1024 * 1024
+    if @options.requireUniqueFilename and (@files.filter (f) -> f.name == file.name && f.accepted).length > 0
+      done @options.dictFilenameNotUnique.replace "{{filename}}", file.name
+    else if file.size > @options.maxFilesize * 1024 * 1024
       done @options.dictFileTooBig.replace("{{filesize}}", Math.round(file.size / 1024 / 10.24) / 100).replace("{{maxFilesize}}", @options.maxFilesize)
     else unless Dropzone.isValidFile file, @options.acceptedFiles
       done @options.dictInvalidFileType
