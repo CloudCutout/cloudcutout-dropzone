@@ -2698,7 +2698,7 @@ Dropzone = (function(superClass) {
               _this.emit("autoretry", file, response || _this.options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr);
               file.previewElement.classList.remove("dz-file-waiting-for-retry");
               return _this.uploadFile(file);
-            }), Math.pow(2, file.uploadAttempt - 2) * 1000));
+            }), (Math.pow(2, file.uploadAttempt - 2) + Math.random() * Math.pow(2, file.uploadAttempt - 2)) * 1000));
           }
         }
         return results;
