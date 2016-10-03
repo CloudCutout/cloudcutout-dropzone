@@ -1217,7 +1217,7 @@ class Dropzone extends Emitter
             @emit "autoretry", file, response || @options.dictResponseError.replace("{{statusCode}}", xhr.status), xhr
             file.previewElement.classList.remove "dz-file-waiting-for-retry"
             @uploadFile file
-          ), Math.pow(2, file.uploadAttempt-2)*1000 # exponential backoff: 1s, 2s, 4s, 8s, etc. 
+          ), (Math.pow(2, file.uploadAttempt-2) + Math.random()*Math.pow(2, file.uploadAttempt-2))*1000 # exponential backoff 
           
 
 
