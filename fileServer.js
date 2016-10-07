@@ -44,7 +44,7 @@ app.post('/', function(req, res){
 
   // once all the files have been uploaded, send a response to the client
   form.on('end', function() {
-    if (Math.random() < 0.2) {
+    if (Math.random() < 0.3) {
         res.send(500);
     } else {
       res.end('success');
