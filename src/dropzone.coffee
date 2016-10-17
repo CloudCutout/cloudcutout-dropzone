@@ -143,6 +143,7 @@ class Dropzone extends Emitter
     maxImageSize: 50 # in megapixels
     paramName: "file" # The name of the file param that gets transferred.
     createImageThumbnails: true
+    readImageData: true # Whether to attempt loading the file as an image and assign the imageData property
     maxThumbnailFilesize: 10 # in MB. When the filename exceeds this limit, the thumbnail will not be generated.
     thumbnailWidth: 120
     thumbnailHeight: 120
@@ -967,12 +968,15 @@ class Dropzone extends Emitter
 
   # Appends imageData property to the file object if it's an image
   addImageData: (file, callback) ->
-    LoadImage file, (img) ->
-      if img.type != 'error'
-        file.imageData = 
-          image: img
-          width: img.naturalWidth
-          height: img.naturalHeight
+    if @options.readImageData
+      LoadImage file, (img) ->
+        if img.type != 'error'
+          file.imageData = 
+            image: img
+            width: img.naturalWidth
+            height: img.naturalHeight
+        callback file
+    else
       callback file
 
 

@@ -26,12 +26,10 @@
                 });
             },
             
-            accept: function(file, done) {
-                return done();
-            },
-            
             autoProcessQueue: true,
-            acceptImagesOnly: true,
+            acceptImagesOnly: false,
+            readImageData: false,
+            createImageThumbnails: false,
 
         });
 
