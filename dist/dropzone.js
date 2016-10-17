@@ -1493,6 +1493,7 @@ Dropzone = (function(superClass) {
     maxImageSize: 50,
     paramName: "file",
     createImageThumbnails: true,
+    readImageData: true,
     maxThumbnailFilesize: 10,
     thumbnailWidth: 120,
     thumbnailHeight: 120,
@@ -2365,16 +2366,20 @@ Dropzone = (function(superClass) {
   };
 
   Dropzone.prototype.addImageData = function(file, callback) {
-    return LoadImage(file, function(img) {
-      if (img.type !== 'error') {
-        file.imageData = {
-          image: img,
-          width: img.naturalWidth,
-          height: img.naturalHeight
-        };
-      }
+    if (this.options.readImageData) {
+      return LoadImage(file, function(img) {
+        if (img.type !== 'error') {
+          file.imageData = {
+            image: img,
+            width: img.naturalWidth,
+            height: img.naturalHeight
+          };
+        }
+        return callback(file);
+      });
+    } else {
       return callback(file);
-    });
+    }
   };
 
   Dropzone.prototype.accept = function(file, done) {
