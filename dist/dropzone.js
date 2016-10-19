@@ -2384,7 +2384,7 @@ Dropzone = (function(superClass) {
 
   Dropzone.prototype.accept = function(file, done) {
     if (this.options.requireUniqueFilename && (this.files.filter(function(f) {
-      return f.name === file.name && f.accepted;
+      return f !== file && f.name === file.name && f.accepted;
     })).length > 0) {
       return done(this.options.dictFilenameNotUnique.replace("{{filename}}", file.name));
     } else if (file.size > this.options.maxFilesize * 1024 * 1024) {
@@ -2410,6 +2410,7 @@ Dropzone = (function(superClass) {
       total: file.size,
       bytesSent: 0
     };
+    file.accepted = void 0;
     file.status = Dropzone.ADDED;
     this.files.push(file);
     this.emit("addedfile", file);
