@@ -988,7 +988,7 @@ class Dropzone extends Emitter
   # This function checks the filesize, and if the file.type passes the
   # `acceptedFiles` check.
   accept: (file, done) ->
-    if @options.requireUniqueFilename and (@files.filter (f) -> f.name == file.name && f.accepted).length > 0
+    if @options.requireUniqueFilename and (@files.filter (f) -> f != file && f.name == file.name && f.accepted).length > 0
       done @options.dictFilenameNotUnique.replace "{{filename}}", file.name
     else if file.size > @options.maxFilesize * 1024 * 1024
       done @options.dictFileTooBig.replace("{{filesize}}", Math.round(file.size / 1024 / 10.24) / 100).replace("{{maxFilesize}}", @options.maxFilesize)
@@ -1013,6 +1013,7 @@ class Dropzone extends Emitter
       total: file.size
       bytesSent: 0
 
+    file.accepted = undefined
     file.status = Dropzone.ADDED
     @files.push file
     
