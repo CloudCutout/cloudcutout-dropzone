@@ -21,7 +21,7 @@ require('./js/load-image-orientation')
  * http://www.opensource.org/licenses/MIT
  */
 
-/*global define, module, require, window */
+/* global define */
 
 ;(function (factory) {
   'use strict'
@@ -407,7 +407,7 @@ require('./js/load-image-orientation')
  * http://www.opensource.org/licenses/MIT
  */
 
-/*global define, module, require, window, console */
+/* global define */
 
 ;(function (factory) {
   'use strict'
@@ -713,7 +713,7 @@ require('./js/load-image-orientation')
  * http://www.opensource.org/licenses/MIT
  */
 
-/*global define, module, require, window, DataView, Blob, Uint8Array, console */
+/* global define, Blob */
 
 ;(function (factory) {
   'use strict'
@@ -749,12 +749,12 @@ require('./js/load-image-orientation')
   // The options arguments accepts an object and supports the following properties:
   // * maxMetaDataSize: Defines the maximum number of bytes to parse.
   // * disableImageHead: Disables creating the imageHead property.
-  loadImage.parseMetaData = function (file, callback, options) {
+  loadImage.parseMetaData = function (file, callback, options, data) {
     options = options || {}
+    data = data || {}
     var that = this
     // 256 KiB should contain all EXIF/ICC/IPTC segments:
     var maxMetaDataSize = options.maxMetaDataSize || 262144
-    var data = {}
     var noMetaData = !(window.DataView && file && file.size >= 12 &&
                       file.type === 'image/jpeg' && loadImage.blobSlice)
     if (noMetaData || !loadImage.readFile(
@@ -840,6 +840,22 @@ require('./js/load-image-orientation')
       callback(data)
     }
   }
+
+  // Determines if meta data should be loaded automatically:
+  loadImage.hasMetaOption = function (options) {
+    return options.meta
+  }
+
+  var originalTransform = loadImage.transform
+  loadImage.transform = function (img, options, callback, file, data) {
+    if (loadImage.hasMetaOption(options || {})) {
+      loadImage.parseMetaData(file, function (data) {
+        originalTransform.call(loadImage, img, options, callback, file, data)
+      }, options, data)
+    } else {
+      originalTransform.apply(loadImage, arguments)
+    }
+  }
 }))
 
 },{"./load-image":6}],5:[function(require,module,exports){
@@ -854,7 +870,7 @@ require('./js/load-image-orientation')
  * http://www.opensource.org/licenses/MIT
  */
 
-/*global define, module, require, window */
+/* global define */
 
 ;(function (factory) {
   'use strict'
@@ -871,14 +887,20 @@ require('./js/load-image-orientation')
   'use strict'
 
   var originalHasCanvasOption = loadImage.hasCanvasOption
+  var originalHasMetaOption = loadImage.hasMetaOption
   var originalTransformCoordinates = loadImage.transformCoordinates
   var originalGetTransformedOptions = loadImage.getTransformedOptions
 
-  // This method is used to determine if the target image
-  // should be a canvas element:
+  // Determines if the target image should be a canvas element:
   loadImage.hasCanvasOption = function (options) {
     return !!options.orientation ||
       originalHasCanvasOption.call(loadImage, options)
+  }
+
+  // Determines if meta data should be loaded automatically:
+  loadImage.hasMetaOption = function (options) {
+    return options.orientation === true ||
+      originalHasMetaOption.call(loadImage, options)
   }
 
   // Transform image orientation based on
@@ -942,11 +964,14 @@ require('./js/load-image-orientation')
 
   // Transforms coordinate and dimension options
   // based on the given orientation option:
-  loadImage.getTransformedOptions = function (img, opts) {
+  loadImage.getTransformedOptions = function (img, opts, data) {
     var options = originalGetTransformedOptions.call(loadImage, img, opts)
     var orientation = options.orientation
     var newOptions
     var i
+    if (orientation === true && data && data.exif) {
+      orientation = data.exif.get('Orientation')
+    }
     if (!orientation || orientation > 8 || orientation === 1) {
       return options
     }
@@ -956,7 +981,8 @@ require('./js/load-image-orientation')
         newOptions[i] = options[i]
       }
     }
-    switch (options.orientation) {
+    newOptions.orientation = orientation
+    switch (orientation) {
       case 2:
         // horizontal flip
         newOptions.left = options.right
@@ -1027,7 +1053,7 @@ require('./js/load-image-orientation')
  * http://www.opensource.org/licenses/MIT
  */
 
-/*global define, module, window, document, URL, webkitURL, FileReader */
+/* global define, URL, webkitURL, FileReader */
 
 ;(function ($) {
   'use strict'
@@ -1035,26 +1061,20 @@ require('./js/load-image-orientation')
   // Loads an image for a given File object.
   // Invokes the callback with an img or optional canvas
   // element (if supported by the browser) as parameter:
-  var loadImage = function (file, callback, options) {
+  function loadImage (file, callback, options) {
     var img = document.createElement('img')
     var url
-    var oUrl
-    img.onerror = callback
-    img.onload = function () {
-      if (oUrl && !(options && options.noRevoke)) {
-        loadImage.revokeObjectURL(oUrl)
-      }
-      if (callback) {
-        callback(loadImage.scale(img, options))
-      }
+    img.onerror = function (event) {
+      return loadImage.onerror(img, event, file, callback, options)
+    }
+    img.onload = function (event) {
+      return loadImage.onload(img, event, file, callback, options)
     }
     if (loadImage.isInstanceOf('Blob', file) ||
       // Files are also Blob instances, but some browsers
       // (Firefox 3.6) support the File API but not Blobs:
       loadImage.isInstanceOf('File', file)) {
-      url = oUrl = loadImage.createObjectURL(file)
-      // Store the file type for resize processing:
-      img._type = file.type
+      url = img._objectURL = loadImage.createObjectURL(file)
     } else if (typeof file === 'string') {
       url = file
       if (options && options.crossOrigin) {
@@ -1071,10 +1091,8 @@ require('./js/load-image-orientation')
       var target = e.target
       if (target && target.result) {
         img.src = target.result
-      } else {
-        if (callback) {
-          callback(e)
-        }
+      } else if (callback) {
+        callback(e)
       }
     })
   }
@@ -1084,9 +1102,34 @@ require('./js/load-image-orientation')
                 (window.URL && URL.revokeObjectURL && URL) ||
                 (window.webkitURL && webkitURL)
 
+  function revokeHelper (img, options) {
+    if (img._objectURL && !(options && options.noRevoke)) {
+      loadImage.revokeObjectURL(img._objectURL)
+      delete img._objectURL
+    }
+  }
+
   loadImage.isInstanceOf = function (type, obj) {
     // Cross-frame instanceof check
     return Object.prototype.toString.call(obj) === '[object ' + type + ']'
+  }
+
+  loadImage.transform = function (img, options, callback, file, data) {
+    callback(loadImage.scale(img, options, data), data)
+  }
+
+  loadImage.onerror = function (img, event, file, callback, options) {
+    revokeHelper(img, options)
+    if (callback) {
+      callback.call(img, event)
+    }
+  }
+
+  loadImage.onload = function (img, event, file, callback, options) {
+    revokeHelper(img, options)
+    if (callback) {
+      loadImage.transform(img, options, callback, file, {})
+    }
   }
 
   // Transform image coordinates, allows to override e.g.
@@ -1154,8 +1197,7 @@ require('./js/load-image-orientation')
     return canvas
   }
 
-  // This method is used to determine if the target image
-  // should be a canvas element:
+  // Determines if the target image should be a canvas element:
   loadImage.hasCanvasOption = function (options) {
     return options.canvas || options.crop || !!options.aspectRatio
   }
@@ -1165,7 +1207,7 @@ require('./js/load-image-orientation')
   // Returns a canvas object if the browser supports canvas
   // and the hasCanvasOption method returns true or a canvas
   // object is passed as image, else the scaled image:
-  loadImage.scale = function (img, options) {
+  loadImage.scale = function (img, options, data) {
     options = options || {}
     var canvas = document.createElement('canvas')
     var useCanvas = img.getContext ||
@@ -1206,7 +1248,7 @@ require('./js/load-image-orientation')
       }
     }
     if (useCanvas) {
-      options = loadImage.getTransformedOptions(img, options)
+      options = loadImage.getTransformedOptions(img, options, data)
       sourceX = options.left || 0
       sourceY = options.top || 0
       if (options.sourceWidth) {
@@ -2751,7 +2793,7 @@ Dropzone = (function(superClass) {
     })(this);
     xhr.onload = (function(_this) {
       return function(e) {
-        var k, len1, ref, results;
+        var k, len1, ref;
         if (files[0].status === Dropzone.CANCELED) {
           return;
         }
@@ -2771,13 +2813,14 @@ Dropzone = (function(superClass) {
         if ((200 <= (ref = xhr.status) && ref < 300)) {
           return _this._finished(files, response, e);
         } else if (xhr.status === 400) {
-          results = [];
           for (k = 0, len1 = files.length; k < len1; k++) {
             file = files[k];
             file.status = Dropzone.REJECTED;
-            results.push(_this.emit("rejectedfile", file, response));
+            _this.emit("rejectedfile", file, response);
           }
-          return results;
+          if (_this.options.autoProcessQueue) {
+            return _this.processQueue();
+          }
         } else {
           return handleError();
         }
