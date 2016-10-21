@@ -447,8 +447,11 @@ class Dropzone extends Emitter
     # Called whenever a file is rejected
     # Receives `file` and `message`
     rejectedfile: (file, message) -> 
+      file.accepted = false
+      file.processing = false
       if file.previewElement
         file.previewElement.classList.add "dz-reject"
+        file.previewElement.classList.remove "dz-processing"
         message = message.error if typeof message != "String" and message.error
         node.textContent = message for node in file.previewElement.querySelectorAll("[data-dz-errormessage]")
 
@@ -1270,10 +1273,14 @@ class Dropzone extends Emitter
 
       updateProgress()
 
-      unless 200 <= xhr.status < 300
-        handleError()
-      else
+      if 200 <= xhr.status < 300
         @_finished files, response, e
+      else if xhr.status == 400
+        for file in files
+          file.status = Dropzone.REJECTED
+          @emit "rejectedfile", file, response
+      else
+        handleError()
 
     xhr.onerror = =>
       return if files[0].status == Dropzone.CANCELED
