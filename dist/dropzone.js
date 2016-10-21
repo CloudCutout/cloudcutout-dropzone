@@ -1705,6 +1705,8 @@ Dropzone = (function(superClass) {
     autoretry: noop,
     rejectedfile: function(file, message) {
       var j, len, node, ref, results;
+      file.accepted = false;
+      file.processing = false;
       if (file.previewElement) {
         file.previewElement.classList.add("dz-reject");
         file.previewElement.classList.remove("dz-processing");
