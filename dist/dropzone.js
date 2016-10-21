@@ -1707,6 +1707,7 @@ Dropzone = (function(superClass) {
       var j, len, node, ref, results;
       if (file.previewElement) {
         file.previewElement.classList.add("dz-reject");
+        file.previewElement.classList.remove("dz-processing");
         if (typeof message !== "String" && message.error) {
           message = message.error;
         }
@@ -2748,7 +2749,7 @@ Dropzone = (function(superClass) {
     })(this);
     xhr.onload = (function(_this) {
       return function(e) {
-        var ref;
+        var k, len1, ref, results;
         if (files[0].status === Dropzone.CANCELED) {
           return;
         }
@@ -2765,10 +2766,18 @@ Dropzone = (function(superClass) {
           }
         }
         updateProgress();
-        if (!((200 <= (ref = xhr.status) && ref < 300))) {
-          return handleError();
-        } else {
+        if ((200 <= (ref = xhr.status) && ref < 300)) {
           return _this._finished(files, response, e);
+        } else if (xhr.status === 400) {
+          results = [];
+          for (k = 0, len1 = files.length; k < len1; k++) {
+            file = files[k];
+            file.status = Dropzone.REJECTED;
+            results.push(_this.emit("rejectedfile", file, response));
+          }
+          return results;
+        } else {
+          return handleError();
         }
       };
     })(this);
