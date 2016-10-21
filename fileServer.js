@@ -6,7 +6,7 @@ const app = express();
 
 // Add headers
 app.use(function (req, res, next) {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8080');
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || 'http://localhost:8080');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,cache-control');
     res.setHeader('Access-Control-Allow-Credentials', true);
@@ -44,8 +44,9 @@ app.post('/', function(req, res){
 
   // once all the files have been uploaded, send a response to the client
   form.on('end', function() {
-    if (Math.random() < 0) {
-        res.send(500);
+    if (Math.random() < 0.5) {
+        res.writeHead(400);
+        res.end('File type not supported');
     } else {
       res.end('success');
     }
