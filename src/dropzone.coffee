@@ -1279,6 +1279,7 @@ class Dropzone extends Emitter
         for file in files
           file.status = Dropzone.REJECTED
           @emit "rejectedfile", file, response
+        @processQueue() if @options.autoProcessQueue
       else
         handleError()
 
